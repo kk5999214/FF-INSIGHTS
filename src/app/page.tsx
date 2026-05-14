@@ -67,8 +67,8 @@ const AppleGlassNav = ({ activeSection }: { activeSection: string }) => {
     const items = [
         { name: "INFO", href: "#info" },
         { name: "STATS", href: "#stats" },
-        { name: "ABOUT US", href: "#about" },
-        { name: "CONTACT US", href: "#contact" },
+        { name: "ABOUT", href: "#about" },
+        { name: "CONTACT", href: "#contact" },
     ];
 
     const handleScroll = (id: string) => {
@@ -83,7 +83,7 @@ const AppleGlassNav = ({ activeSection }: { activeSection: string }) => {
                     key={item.name}
                     onClick={() => handleScroll(item.href)}
                     className={cn(
-                        "relative px-6 py-2 text-xs tracking-widest font-bold uppercase transition-colors duration-300 rounded-full",
+                        "relative px-4 md:px-6 py-2 text-xs tracking-widest font-bold uppercase transition-colors duration-300 rounded-full",
                         activeSection === item.name.toLowerCase() ? "text-black" : "text-white/60 hover:text-white"
                     )}
                 >
@@ -212,11 +212,6 @@ const BioFluidBackground = () => {
         }
         window.addEventListener("resize", resize); resize();
 
-        const handleVisibilityChange = () => {
-            if (document.visibilityState === "visible") resize();
-        };
-        document.addEventListener("visibilitychange", handleVisibilityChange);
-
         function updateMouse(x: number, y: number) {
             targetMouse.set(x / gl.canvas.width, 1.0 - y / gl.canvas.height);
             isMoving = 1.0;
@@ -256,7 +251,6 @@ const BioFluidBackground = () => {
         return () => { 
             cancelAnimationFrame(animationId); 
             window.removeEventListener("resize", resize); 
-            document.removeEventListener("visibilitychange", handleVisibilityChange);
             window.removeEventListener("scroll", handleScrollMove);
             gl.getExtension("WEBGL_lose_context")?.loseContext(); 
         };
@@ -265,32 +259,71 @@ const BioFluidBackground = () => {
     return <div ref={containerRef} className="absolute inset-0 z-0 opacity-50" />;
 };
 
-// --- CONTACT FORM W/ MORPH SUBMIT ---
+// --- CONTACT FORM W/ MORPH SUBMIT & RESET ---
 const ContactForm = () => {
     const [status, setStatus] = useState("idle");
+    const [name, setName] = useState("");
+    const [email, setEmail] = useState("");
+    const [message, setMessage] = useState("");
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (status !== "idle") return;
         
-        // This is where we will trigger the Brave API later!
         setStatus("loading");
-        setTimeout(() => setStatus("success"), 2000);
+        
+        // This is where the Brave API fetch request will go
+        setTimeout(() => {
+            setStatus("success");
+            // Wipe the form clean when successful
+            setName("");
+            setEmail("");
+            setMessage("");
+        }, 2000);
+        
         setTimeout(() => setStatus("idle"), 4000);
     };
 
     return (
         <div className="max-w-2xl mx-auto bg-gradient-to-b from-white/5 to-transparent border border-white/10 rounded-3xl p-10 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+            <div className="flex justify-center mb-8">
+                <div className="bg-white/10 p-4 rounded-full">
+                    <MessageSquare className="w-8 h-8 text-white" />
+                </div>
+            </div>
+            <h2 className="text-3xl font-bold text-white mb-8 text-center capitalize">Establish Secure Connection</h2>
+            
             <form className="space-y-6" onSubmit={handleSubmit}>
                 <div className="relative">
                     <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" />
-                    <input required type="text" placeholder="YOUR NAME" className="w-full bg-black/50 border border-white/10 rounded-xl pl-12 pr-4 py-4 text-white outline-none focus:border-cyan-400 transition-colors placeholder:text-neutral-600" />
+                    <input 
+                        required 
+                        type="text" 
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="YOUR NAME" 
+                        className="w-full bg-black/50 border border-white/10 rounded-xl pl-12 pr-4 py-4 text-white outline-none focus:border-cyan-400 transition-colors placeholder:text-neutral-600" 
+                    />
                 </div>
                 <div className="relative">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" />
-                    <input required type="email" placeholder="YOUR EMAIL" className="w-full bg-black/50 border border-white/10 rounded-xl pl-12 pr-4 py-4 text-white outline-none focus:border-cyan-400 transition-colors placeholder:text-neutral-600" />
+                    <input 
+                        required 
+                        type="email" 
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="YOUR EMAIL" 
+                        className="w-full bg-black/50 border border-white/10 rounded-xl pl-12 pr-4 py-4 text-white outline-none focus:border-cyan-400 transition-colors placeholder:text-neutral-600" 
+                    />
                 </div>
-                <textarea required placeholder="WRITE YOUR MESSAGE..." rows={5} className="w-full bg-black/50 border border-white/10 rounded-xl px-5 py-4 text-white outline-none focus:border-cyan-400 transition-colors resize-none placeholder:text-neutral-600" />
+                <textarea 
+                    required 
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder="WRITE YOUR MESSAGE..." 
+                    rows={5} 
+                    className="w-full bg-black/50 border border-white/10 rounded-xl px-5 py-4 text-white outline-none focus:border-cyan-400 transition-colors resize-none placeholder:text-neutral-600" 
+                />
                 
                 <div className="flex justify-center pt-4">
                     <button
@@ -334,18 +367,36 @@ export default function FFInsights() {
     const [region, setRegion] = useState("IND");
     const [playerData, setPlayerData] = useState<any>(null);
     const [loading, setLoading] = useState(false);
+    const [bgKey, setBgKey] = useState(0);
+
+    // Forces WebGL to reboot perfectly if the user minimizes the browser
+    useEffect(() => {
+        const handleVisibility = () => {
+            if (document.visibilityState === 'visible') {
+                setBgKey(prev => prev + 1);
+            }
+        };
+        document.addEventListener("visibilitychange", handleVisibility);
+        return () => document.removeEventListener("visibilitychange", handleVisibility);
+    }, []);
 
     useEffect(() => {
         const lenis = new Lenis({ duration: 1.2, smoothWheel: true });
         const onScroll = () => {
             const sections = ["info", "stats", "about", "contact"];
-            const scrollPos = window.scrollY + 300;
+            const scrollPos = window.scrollY + window.innerHeight / 2;
+            
             sections.forEach((id) => {
                 const el = document.getElementById(id);
                 if (el && scrollPos >= el.offsetTop && scrollPos < el.offsetTop + el.offsetHeight) {
                     setActiveSection(id);
                 }
             });
+
+            // Fallback for bottom of page to ensure Contact highlights perfectly
+            if ((window.innerHeight + Math.round(window.scrollY)) >= document.body.offsetHeight - 50) {
+                setActiveSection("contact");
+            }
         };
         window.addEventListener("scroll", onScroll);
         function raf(time: number) { lenis.raf(time); requestAnimationFrame(raf); }
@@ -371,7 +422,7 @@ export default function FFInsights() {
             <AppleGlassNav activeSection={activeSection} />
 
             <section id="info" className="relative flex flex-col items-center justify-center min-h-screen overflow-hidden">
-                <BioFluidBackground />
+                <BioFluidBackground key={bgKey} />
                 <div className="relative z-10 flex flex-col items-center text-center px-6">
                     <p className="text-sm font-mono tracking-[0.5em] text-cyan-400 uppercase animate-pulse mb-6">Decode The Void</p>
                     <h1 className="text-6xl md:text-9xl font-black tracking-tighter">
