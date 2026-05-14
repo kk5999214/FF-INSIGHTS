@@ -8,7 +8,7 @@ import Lenis from "lenis";
 import { 
     Search, Shield, Cpu, ArrowRight, Activity, 
     Mail, User, MessageSquare, Database, Target, 
-    Zap, Send, Check, Loader2, ChevronDown 
+    Zap, Send, Check, Loader2, ChevronDown, Clock, Crosshair, MapPin
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -18,12 +18,25 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
+const formatUnixDate = (timestamp: string) => {
+    if (!timestamp) return "Unknown";
+    const date = new Date(parseInt(timestamp) * 1000);
+    return date.toLocaleDateString("en-US", { 
+        day: '2-digit', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    });
+};
+
 // --- 14KB IMAGE INTERCEPTOR ---
 const SafeImage = ({ id, className }: { id: number | string, className?: string }) => {
     const [src, setSrc] = useState<string | null>(null);
     const [isValid, setIsValid] = useState(true);
 
     useEffect(() => {
+        if (!id) {
+            setIsValid(false);
+            return;
+        }
         const checkImage = async () => {
             const url = `https://iconapi.wasmer.app/${id}`;
             try {
@@ -43,7 +56,7 @@ const SafeImage = ({ id, className }: { id: number | string, className?: string 
 
     if (!isValid || !src) {
         return (
-            <div className={cn("bg-white/5 border border-white/10 rounded-xl animate-pulse flex items-center justify-center", className)}>
+            <div className={cn("bg-white/5 border border-white/10 rounded-xl animate-pulse flex items-center justify-center h-24", className)}>
                 <Shield className="w-6 h-6 text-white/20" />
             </div>
         );
@@ -421,9 +434,16 @@ export default function FFInsights() {
         try {
             const res = await fetch(`https://floating-savannah-82139-2308889ea31f.herokuapp.com/api/info?uid=${uid}&region=${region}`);
             const json = await res.json();
-            if (json.data) setPlayerData(json.data);
+            
+            // CAPITAL D BUG FIX
+            if (json.Data) {
+                setPlayerData(json.Data);
+            } else {
+                alert("Data extraction failed or UID not found.");
+            }
         } catch (error) {
-            console.error("Extraction Failed");
+            console.error("Extraction Failed", error);
+            alert("API Connection Failed");
         }
         setLoading(false);
     };
@@ -491,61 +511,190 @@ export default function FFInsights() {
             <AnimatePresence>
                 {playerData && (
                     <motion.section initial={{ opacity: 0, y: 100 }} animate={{ opacity: 1, y: 0 }} className="relative z-20 max-w-7xl mx-auto px-6 py-24 pb-48 space-y-8">
-                        <div className="bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-md">
-                            <h2 className="text-3xl font-bold mb-6 text-cyan-400 capitalize">Player Identity</h2>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                                <div><p className="text-neutral-500 text-sm capitalize">Nickname</p><p className="text-xl font-bold">{playerData.basicInfo?.nickname}</p></div>
-                                <div><p className="text-neutral-500 text-sm capitalize">Level</p><p className="text-xl font-bold">{playerData.basicInfo?.level}</p></div>
-                                <div><p className="text-neutral-500 text-sm capitalize">Likes</p><p className="text-xl font-bold">{playerData.basicInfo?.liked}</p></div>
-                                <div><p className="text-neutral-500 text-sm capitalize">BR Rank</p><p className="text-xl font-bold">{playerData.basicInfo?.rankingPoints}</p></div>
+                        
+                        {/* CORE STATS */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div className="bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-md relative overflow-hidden">
+                                <div className="absolute -right-10 -top-10 text-white/5 pointer-events-none">
+                                    <User size={200} />
+                                </div>
+                                <h2 className="text-3xl font-bold mb-8 text-cyan-400">Player Identity</h2>
+                                <div className="space-y-6 relative z-10">
+                                    <div className="flex justify-between border-b border-white/5 pb-2">
+                                        <span className="text-neutral-500">Nickname</span>
+                                        <span className="font-bold">{playerData.basicInfo?.nickname}</span>
+                                    </div>
+                                    <div className="flex justify-between border-b border-white/5 pb-2">
+                                        <span className="text-neutral-500">UID</span>
+                                        <span className="font-mono font-bold text-cyan-300">{playerData.basicInfo?.accountId}</span>
+                                    </div>
+                                    <div className="flex justify-between border-b border-white/5 pb-2">
+                                        <span className="text-neutral-500">Region</span>
+                                        <span className="font-bold uppercase">{playerData.basicInfo?.region}</span>
+                                    </div>
+                                    <div className="flex justify-between border-b border-white/5 pb-2">
+                                        <span className="text-neutral-500">Created On</span>
+                                        <span className="font-mono text-sm">{formatUnixDate(playerData.basicInfo?.createAt)}</span>
+                                    </div>
+                                    <div className="flex justify-between border-b border-white/5 pb-2">
+                                        <span className="text-neutral-500">Last Login</span>
+                                        <span className="font-mono text-sm">{formatUnixDate(playerData.basicInfo?.lastLoginAt)} ({playerData.basicInfo?.releaseVersion})</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-neutral-500 block mb-2">Bio / Signature</span>
+                                        <div className="bg-black/30 p-4 rounded-xl border border-white/5 text-sm font-mono text-neutral-300 whitespace-pre-wrap">
+                                            {playerData.socialInfo?.socialHighlight || "No Bio Available"}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-md relative overflow-hidden">
+                                <div className="absolute -right-10 -bottom-10 text-white/5 pointer-events-none">
+                                    <Target size={200} />
+                                </div>
+                                <h2 className="text-3xl font-bold mb-8 text-indigo-400">Combat Metrics</h2>
+                                <div className="grid grid-cols-2 gap-6 relative z-10">
+                                    <div className="bg-black/20 p-4 rounded-2xl border border-white/5">
+                                        <p className="text-neutral-500 text-sm mb-1">Level</p>
+                                        <p className="text-3xl font-black">{playerData.basicInfo?.level}</p>
+                                    </div>
+                                    <div className="bg-black/20 p-4 rounded-2xl border border-white/5">
+                                        <p className="text-neutral-500 text-sm mb-1">Honor Score</p>
+                                        <p className={cn("text-3xl font-black", playerData.creditScoreInfo?.score === 100 ? "text-emerald-400" : "text-yellow-400")}>
+                                            {playerData.creditScoreInfo?.score || "N/A"}
+                                        </p>
+                                    </div>
+                                    <div className="bg-black/20 p-4 rounded-2xl border border-white/5">
+                                        <p className="text-neutral-500 text-sm mb-1">BR Rank Points</p>
+                                        <p className="text-2xl font-bold">{playerData.basicInfo?.rankingPoints}</p>
+                                    </div>
+                                    <div className="bg-black/20 p-4 rounded-2xl border border-white/5">
+                                        <p className="text-neutral-500 text-sm mb-1">CS Rank Points</p>
+                                        <p className="text-2xl font-bold">{playerData.basicInfo?.csRankingPoints}</p>
+                                    </div>
+                                    <div className="bg-black/20 p-4 rounded-2xl border border-white/5">
+                                        <p className="text-neutral-500 text-sm mb-1">Likes</p>
+                                        <p className="text-2xl font-bold text-pink-400">{playerData.basicInfo?.liked}</p>
+                                    </div>
+                                    <div className="bg-black/20 p-4 rounded-2xl border border-white/5">
+                                        <p className="text-neutral-500 text-sm mb-1">Pass Level</p>
+                                        <p className="text-2xl font-bold">{playerData.basicInfo?.badgeCnt}</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-md">
-                                <h2 className="text-2xl font-bold mb-6 capitalize">Active Outfit</h2>
-                                <div className="grid grid-cols-3 gap-4">
+                        {/* LOADOUTS & VISUALS */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            
+                            <div className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-md">
+                                <h2 className="text-xl font-bold mb-6 text-neutral-300">Active Outfit</h2>
+                                <div className="grid grid-cols-2 gap-4">
                                     {playerData.profileInfo?.cosmeticItems?.map((id: number, i: number) => (
-                                        <SafeImage key={i} id={id} className="w-full h-32 object-contain" />
+                                        <SafeImage key={`cosmetic-${i}`} id={id} className="w-full h-32 object-contain" />
                                     ))}
+                                    {(!playerData.profileInfo?.cosmeticItems || playerData.profileInfo.cosmeticItems.length === 0) && (
+                                        <p className="text-neutral-600 text-sm col-span-2 text-center py-8">No outfit data extracted.</p>
+                                    )}
                                 </div>
                             </div>
-                            <div className="bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-md">
-                                <h2 className="text-2xl font-bold mb-6 capitalize">Weapon Loadout</h2>
+
+                            <div className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-md">
+                                <h2 className="text-xl font-bold mb-6 text-neutral-300">Equipped Skills</h2>
+                                <div className="grid grid-cols-2 gap-4">
+                                    {playerData.profileInfo?.equippedSkills?.map((id: number, i: number) => (
+                                        <SafeImage key={`skill-${i}`} id={id} className="w-full h-24 object-contain" />
+                                    ))}
+                                    {(!playerData.profileInfo?.equippedSkills || playerData.profileInfo.equippedSkills.length === 0) && (
+                                        <p className="text-neutral-600 text-sm col-span-2 text-center py-8">No skill data extracted.</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-md">
+                                <h2 className="text-xl font-bold mb-6 text-neutral-300">Weapon Loadout</h2>
                                 <div className="grid grid-cols-2 gap-4">
                                     {playerData.basicInfo?.weaponSkinShows?.map((id: number, i: number) => (
-                                        <SafeImage key={i} id={id} className="w-full h-32 object-contain" />
+                                        <SafeImage key={`weapon-${i}`} id={id} className="w-full h-24 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
                                     ))}
+                                    {(!playerData.basicInfo?.weaponSkinShows || playerData.basicInfo.weaponSkinShows.length === 0) && (
+                                        <p className="text-neutral-600 text-sm col-span-2 text-center py-8">No weapons extracted.</p>
+                                    )}
                                 </div>
+                            </div>
+
+                        </div>
+
+                        {/* COMPANION & GUILD */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <div className="bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-md">
+                                <h2 className="text-2xl font-bold mb-6 text-yellow-400">Companion</h2>
+                                {playerData.petInfo ? (
+                                    <>
+                                        <div className="flex justify-between items-end mb-6">
+                                            <div>
+                                                <p className="text-neutral-500 text-sm">Name</p>
+                                                <p className="text-xl font-bold">{playerData.petInfo.petName || "Unnamed"}</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-neutral-500 text-sm">Level</p>
+                                                <p className="text-xl font-bold">{playerData.petInfo.level}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-center gap-6 mt-4">
+                                            {playerData.petInfo.skinId && <SafeImage id={playerData.petInfo.skinId} className="w-32 h-32 object-contain drop-shadow-2xl" />}
+                                            {playerData.petInfo.selectedSkillId && <SafeImage id={playerData.petInfo.selectedSkillId} className="w-16 h-16 object-contain self-end" />}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <p className="text-neutral-600 text-center py-10">No active companion.</p>
+                                )}
+                            </div>
+                            
+                            <div className="lg:col-span-2 bg-gradient-to-br from-indigo-900/20 to-purple-900/20 border border-indigo-500/30 rounded-3xl p-8 backdrop-blur-md">
+                                <h2 className="text-2xl font-bold mb-8 text-indigo-400">Guild Architecture</h2>
+                                {playerData.clanBasicInfo ? (
+                                    <>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+                                            <div className="md:col-span-2">
+                                                <p className="text-neutral-500 text-sm">Clan Name</p>
+                                                <p className="text-3xl font-black text-white drop-shadow-md">{playerData.clanBasicInfo.clanName}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-neutral-500 text-sm">Level</p>
+                                                <p className="text-2xl font-bold">{playerData.clanBasicInfo.clanLevel}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-neutral-500 text-sm">Capacity</p>
+                                                <p className="text-2xl font-bold text-cyan-300">{playerData.clanBasicInfo.currentMembers} / {playerData.clanBasicInfo.maxMembers}</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="bg-black/30 rounded-2xl p-6 border border-white/5">
+                                            <div className="flex items-center gap-2 mb-4">
+                                                <Shield className="w-5 h-5 text-indigo-400" />
+                                                <h3 className="text-lg font-bold text-neutral-200">Captain's Intel</h3>
+                                            </div>
+                                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                                <div>
+                                                    <p className="text-neutral-400">Name: <span className="text-white font-bold">{playerData.captainBasicInfo?.nickname}</span></p>
+                                                    <p className="text-neutral-400">UID: <span className="text-white font-mono">{playerData.captainBasicInfo?.accountId}</span></p>
+                                                </div>
+                                                <div className="flex gap-3">
+                                                    {playerData.captainBasicInfo?.weaponSkinShows?.map((id: number, i: number) => (
+                                                        <SafeImage key={`capt-weap-${i}`} id={id} className="w-16 h-16 object-contain bg-white/5 rounded-lg p-2 border border-white/10" />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <p className="text-neutral-600 text-center py-20">Player is a lone wolf (No Guild).</p>
+                                )}
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                            <div className="bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-md">
-                                <h2 className="text-2xl font-bold mb-4 capitalize">Companion</h2>
-                                <p className="text-neutral-400 capitalize">Name: {playerData.petInfo?.petName}</p>
-                                <p className="text-neutral-400 capitalize">Level: {playerData.petInfo?.level}</p>
-                                <div className="flex gap-4 mt-4">
-                                    <SafeImage id={playerData.petInfo?.skinId} className="w-24 h-24 object-contain" />
-                                    <SafeImage id={playerData.petInfo?.petId} className="w-24 h-24 object-contain" />
-                                </div>
-                            </div>
-                            
-                            <div className="col-span-2 bg-gradient-to-br from-indigo-900/20 to-purple-900/20 border border-indigo-500/30 rounded-3xl p-8 backdrop-blur-md">
-                                <h2 className="text-2xl font-bold mb-6 text-indigo-400 capitalize">Guild Architecture</h2>
-                                <div className="flex justify-between items-center mb-6">
-                                    <div><p className="text-neutral-500 text-sm capitalize">Clan Name</p><p className="text-2xl font-black">{playerData.clanBasicInfo?.clanName}</p></div>
-                                    <div className="text-right"><p className="text-neutral-500 text-sm capitalize">Capacity</p><p className="text-2xl font-black">{playerData.clanBasicInfo?.currentMembers} / {playerData.clanBasicInfo?.maxMembers}</p></div>
-                                </div>
-                                <div className="w-full h-px bg-white/10 my-4" />
-                                <h3 className="text-lg font-bold text-neutral-300 capitalize">Captain Arsenal</h3>
-                                <div className="flex gap-4 mt-4">
-                                    {playerData.captainBasicInfo?.weaponSkinShows?.map((id: number, i: number) => (
-                                        <SafeImage key={i} id={id} className="w-full h-32 object-contain" />
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
                     </motion.section>
                 )}
             </AnimatePresence>
