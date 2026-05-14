@@ -6,9 +6,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Renderer, Program, Mesh, Triangle, Vec2, RenderTarget } from "ogl";
 import Lenis from "lenis";
 import { 
-    Search, Shield, Cpu, ArrowRight, Activity, 
+    Search, Shield, Cpu, Activity, 
     Mail, User, MessageSquare, Database, Target, 
-    Zap, Send, Check, Loader2, ChevronDown, Clock, Crosshair, MapPin
+    Zap, Send, Check, Loader2, ChevronDown
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -272,7 +272,7 @@ const BioFluidBackground = () => {
     return <div ref={containerRef} className="absolute inset-0 z-0 opacity-50" />;
 };
 
-// --- CONTACT FORM W/ LIVE API FETCH ---
+// --- CONTACT FORM ---
 const ContactForm = () => {
     const [status, setStatus] = useState("idle");
     const [name, setName] = useState("");
@@ -300,11 +300,11 @@ const ContactForm = () => {
                 setTimeout(() => setStatus("idle"), 4000);
             } else {
                 setStatus("idle");
-                alert("Transmission Failed. Secure connection lost.");
+                alert("Transmission Failed. Secure Connection Lost.");
             }
         } catch (error) {
             setStatus("idle");
-            alert("Transmission Failed. Check network connection.");
+            alert("Transmission Failed. Check Network Connection.");
         }
     };
 
@@ -326,7 +326,7 @@ const ContactForm = () => {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="YOUR NAME" 
-                        className="w-full bg-black/50 border border-white/10 rounded-xl pl-12 pr-4 py-4 text-white outline-none focus:border-cyan-400 transition-colors placeholder:text-neutral-600" 
+                        className="w-full bg-black/50 border border-white/10 rounded-xl pl-12 pr-4 py-4 text-white outline-none focus:border-cyan-400 transition-colors placeholder:text-neutral-600 capitalize" 
                     />
                 </div>
                 <div className="relative">
@@ -337,7 +337,7 @@ const ContactForm = () => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="YOUR EMAIL" 
-                        className="w-full bg-black/50 border border-white/10 rounded-xl pl-12 pr-4 py-4 text-white outline-none focus:border-cyan-400 transition-colors placeholder:text-neutral-600" 
+                        className="w-full bg-black/50 border border-white/10 rounded-xl pl-12 pr-4 py-4 text-white outline-none focus:border-cyan-400 transition-colors placeholder:text-neutral-600 capitalize" 
                     />
                 </div>
                 <textarea 
@@ -346,7 +346,7 @@ const ContactForm = () => {
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder="WRITE YOUR MESSAGE..." 
                     rows={5} 
-                    className="w-full bg-black/50 border border-white/10 rounded-xl px-5 py-4 text-white outline-none focus:border-cyan-400 transition-colors resize-none placeholder:text-neutral-600" 
+                    className="w-full bg-black/50 border border-white/10 rounded-xl px-5 py-4 text-white outline-none focus:border-cyan-400 transition-colors resize-none placeholder:text-neutral-600 capitalize" 
                 />
                 
                 <div className="flex justify-center pt-4">
@@ -362,8 +362,8 @@ const ContactForm = () => {
                     >
                         <AnimatePresence mode="wait">
                             {status === "idle" && (
-                                <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2">
-                                    <span>SEND MESSAGE</span> <Send size={18} />
+                                <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2 capitalize">
+                                    <span>Send Message</span> <Send size={18} />
                                 </motion.div>
                             )}
                             {status === "loading" && (
@@ -372,8 +372,8 @@ const ContactForm = () => {
                                 </motion.div>
                             )}
                             {status === "success" && (
-                                <motion.div key="success" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2">
-                                    <span>SENT!</span> <Check size={18} />
+                                <motion.div key="success" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2 capitalize">
+                                    <span>Sent!</span> <Check size={18} />
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -428,22 +428,30 @@ export default function FFInsights() {
         return () => { lenis.destroy(); window.removeEventListener("scroll", onScroll); };
     }, []);
 
+    // --- SECURE PROXY FETCH ENGINE ---
     const fetchProfile = async () => {
         if (!uid) return;
         setLoading(true);
         try {
-            const res = await fetch(`https://floating-savannah-82139-2308889ea31f.herokuapp.com/api/info?uid=${uid}&region=${region}`);
+            // Proxies payload straight through backend to instantly bypass Browser CORS blocks
+            const res = await fetch(`/api/player?uid=${uid}&region=${region}`);
             const json = await res.json();
             
-            // CAPITAL D BUG FIX
+            if (json.error) {
+                alert(json.error);
+                setLoading(false);
+                return;
+            }
+
+            // Maps perfectly to Heroku Capital 'D' Object Structure
             if (json.Data) {
                 setPlayerData(json.Data);
             } else {
-                alert("Data extraction failed or UID not found.");
+                alert("Data Extraction Failed Or UID Not Found.");
             }
         } catch (error) {
             console.error("Extraction Failed", error);
-            alert("API Connection Failed");
+            alert("Network Connection Failed.");
         }
         setLoading(false);
     };
@@ -455,13 +463,13 @@ export default function FFInsights() {
             <section id="info" className="relative flex flex-col items-center justify-center min-h-screen overflow-hidden">
                 <BioFluidBackground key={bgKey} />
                 <div className="relative z-10 flex flex-col items-center text-center px-6">
-                    <p className="text-sm font-mono tracking-[0.5em] text-cyan-400 uppercase animate-pulse mb-6">Decode The Void</p>
+                    <p className="text-sm font-mono tracking-[0.5em] text-cyan-400 uppercase animate-pulse mb-6 capitalize">Decode The Void</p>
                     <h1 className="text-6xl md:text-9xl font-black tracking-tighter">
-                        <span className="text-transparent bg-clip-text bg-gradient-to-b from-white to-white/20">
-                            FF INSIGHTS
+                        <span className="text-transparent bg-clip-text bg-gradient-to-b from-white to-white/20 capitalize">
+                            FF Insights
                         </span>
                     </h1>
-                    <p className="mt-6 max-w-xl text-neutral-400 font-light">Harness The Raw Telemetry Of The Battlefield. Real Time Player Insights And Kinetic Data Analysis.</p>
+                    <p className="mt-6 max-w-xl text-neutral-400 font-light capitalize">Harness The Raw Telemetry Of The Battlefield. Real Time Player Insights And Kinetic Data Analysis.</p>
                     
                     <div className="mt-12 w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-2 flex items-center gap-2 shadow-[0_0_40px_rgba(0,255,255,0.05)] focus-within:shadow-[0_0_40px_rgba(0,255,255,0.2)] transition-all">
                         
@@ -518,30 +526,30 @@ export default function FFInsights() {
                                 <div className="absolute -right-10 -top-10 text-white/5 pointer-events-none">
                                     <User size={200} />
                                 </div>
-                                <h2 className="text-3xl font-bold mb-8 text-cyan-400">Player Identity</h2>
+                                <h2 className="text-3xl font-bold mb-8 text-cyan-400 capitalize">Player Identity</h2>
                                 <div className="space-y-6 relative z-10">
                                     <div className="flex justify-between border-b border-white/5 pb-2">
-                                        <span className="text-neutral-500">Nickname</span>
+                                        <span className="text-neutral-500 capitalize">Nickname</span>
                                         <span className="font-bold">{playerData.basicInfo?.nickname}</span>
                                     </div>
                                     <div className="flex justify-between border-b border-white/5 pb-2">
-                                        <span className="text-neutral-500">UID</span>
+                                        <span className="text-neutral-500 uppercase">UID</span>
                                         <span className="font-mono font-bold text-cyan-300">{playerData.basicInfo?.accountId}</span>
                                     </div>
                                     <div className="flex justify-between border-b border-white/5 pb-2">
-                                        <span className="text-neutral-500">Region</span>
+                                        <span className="text-neutral-500 capitalize">Region</span>
                                         <span className="font-bold uppercase">{playerData.basicInfo?.region}</span>
                                     </div>
                                     <div className="flex justify-between border-b border-white/5 pb-2">
-                                        <span className="text-neutral-500">Created On</span>
+                                        <span className="text-neutral-500 capitalize">Created On</span>
                                         <span className="font-mono text-sm">{formatUnixDate(playerData.basicInfo?.createAt)}</span>
                                     </div>
                                     <div className="flex justify-between border-b border-white/5 pb-2">
-                                        <span className="text-neutral-500">Last Login</span>
+                                        <span className="text-neutral-500 capitalize">Last Login</span>
                                         <span className="font-mono text-sm">{formatUnixDate(playerData.basicInfo?.lastLoginAt)} ({playerData.basicInfo?.releaseVersion})</span>
                                     </div>
                                     <div>
-                                        <span className="text-neutral-500 block mb-2">Bio / Signature</span>
+                                        <span className="text-neutral-500 block mb-2 capitalize">Bio / Signature</span>
                                         <div className="bg-black/30 p-4 rounded-xl border border-white/5 text-sm font-mono text-neutral-300 whitespace-pre-wrap">
                                             {playerData.socialInfo?.socialHighlight || "No Bio Available"}
                                         </div>
@@ -553,32 +561,32 @@ export default function FFInsights() {
                                 <div className="absolute -right-10 -bottom-10 text-white/5 pointer-events-none">
                                     <Target size={200} />
                                 </div>
-                                <h2 className="text-3xl font-bold mb-8 text-indigo-400">Combat Metrics</h2>
+                                <h2 className="text-3xl font-bold mb-8 text-indigo-400 capitalize">Combat Metrics</h2>
                                 <div className="grid grid-cols-2 gap-6 relative z-10">
                                     <div className="bg-black/20 p-4 rounded-2xl border border-white/5">
-                                        <p className="text-neutral-500 text-sm mb-1">Level</p>
+                                        <p className="text-neutral-500 text-sm mb-1 capitalize">Level</p>
                                         <p className="text-3xl font-black">{playerData.basicInfo?.level}</p>
                                     </div>
                                     <div className="bg-black/20 p-4 rounded-2xl border border-white/5">
-                                        <p className="text-neutral-500 text-sm mb-1">Honor Score</p>
+                                        <p className="text-neutral-500 text-sm mb-1 capitalize">Honor Score</p>
                                         <p className={cn("text-3xl font-black", playerData.creditScoreInfo?.score === 100 ? "text-emerald-400" : "text-yellow-400")}>
                                             {playerData.creditScoreInfo?.score || "N/A"}
                                         </p>
                                     </div>
                                     <div className="bg-black/20 p-4 rounded-2xl border border-white/5">
-                                        <p className="text-neutral-500 text-sm mb-1">BR Rank Points</p>
+                                        <p className="text-neutral-500 text-sm mb-1 capitalize">BR Rank Points</p>
                                         <p className="text-2xl font-bold">{playerData.basicInfo?.rankingPoints}</p>
                                     </div>
                                     <div className="bg-black/20 p-4 rounded-2xl border border-white/5">
-                                        <p className="text-neutral-500 text-sm mb-1">CS Rank Points</p>
+                                        <p className="text-neutral-500 text-sm mb-1 capitalize">CS Rank Points</p>
                                         <p className="text-2xl font-bold">{playerData.basicInfo?.csRankingPoints}</p>
                                     </div>
                                     <div className="bg-black/20 p-4 rounded-2xl border border-white/5">
-                                        <p className="text-neutral-500 text-sm mb-1">Likes</p>
+                                        <p className="text-neutral-500 text-sm mb-1 capitalize">Likes</p>
                                         <p className="text-2xl font-bold text-pink-400">{playerData.basicInfo?.liked}</p>
                                     </div>
                                     <div className="bg-black/20 p-4 rounded-2xl border border-white/5">
-                                        <p className="text-neutral-500 text-sm mb-1">Pass Level</p>
+                                        <p className="text-neutral-500 text-sm mb-1 capitalize">Pass Level</p>
                                         <p className="text-2xl font-bold">{playerData.basicInfo?.badgeCnt}</p>
                                     </div>
                                 </div>
@@ -589,37 +597,37 @@ export default function FFInsights() {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             
                             <div className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-md">
-                                <h2 className="text-xl font-bold mb-6 text-neutral-300">Active Outfit</h2>
+                                <h2 className="text-xl font-bold mb-6 text-neutral-300 capitalize">Active Outfit</h2>
                                 <div className="grid grid-cols-2 gap-4">
                                     {playerData.profileInfo?.cosmeticItems?.map((id: number, i: number) => (
                                         <SafeImage key={`cosmetic-${i}`} id={id} className="w-full h-32 object-contain" />
                                     ))}
                                     {(!playerData.profileInfo?.cosmeticItems || playerData.profileInfo.cosmeticItems.length === 0) && (
-                                        <p className="text-neutral-600 text-sm col-span-2 text-center py-8">No outfit data extracted.</p>
+                                        <p className="text-neutral-600 text-sm col-span-2 text-center py-8 capitalize">No Outfit Data Extracted.</p>
                                     )}
                                 </div>
                             </div>
 
                             <div className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-md">
-                                <h2 className="text-xl font-bold mb-6 text-neutral-300">Equipped Skills</h2>
+                                <h2 className="text-xl font-bold mb-6 text-neutral-300 capitalize">Equipped Skills</h2>
                                 <div className="grid grid-cols-2 gap-4">
                                     {playerData.profileInfo?.equippedSkills?.map((id: number, i: number) => (
                                         <SafeImage key={`skill-${i}`} id={id} className="w-full h-24 object-contain" />
                                     ))}
                                     {(!playerData.profileInfo?.equippedSkills || playerData.profileInfo.equippedSkills.length === 0) && (
-                                        <p className="text-neutral-600 text-sm col-span-2 text-center py-8">No skill data extracted.</p>
+                                        <p className="text-neutral-600 text-sm col-span-2 text-center py-8 capitalize">No Skill Data Extracted.</p>
                                     )}
                                 </div>
                             </div>
 
                             <div className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-md">
-                                <h2 className="text-xl font-bold mb-6 text-neutral-300">Weapon Loadout</h2>
+                                <h2 className="text-xl font-bold mb-6 text-neutral-300 capitalize">Weapon Loadout</h2>
                                 <div className="grid grid-cols-2 gap-4">
                                     {playerData.basicInfo?.weaponSkinShows?.map((id: number, i: number) => (
                                         <SafeImage key={`weapon-${i}`} id={id} className="w-full h-24 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
                                     ))}
                                     {(!playerData.basicInfo?.weaponSkinShows || playerData.basicInfo.weaponSkinShows.length === 0) && (
-                                        <p className="text-neutral-600 text-sm col-span-2 text-center py-8">No weapons extracted.</p>
+                                        <p className="text-neutral-600 text-sm col-span-2 text-center py-8 capitalize">No Weapons Extracted.</p>
                                     )}
                                 </div>
                             </div>
@@ -629,16 +637,16 @@ export default function FFInsights() {
                         {/* COMPANION & GUILD */}
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                             <div className="bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-md">
-                                <h2 className="text-2xl font-bold mb-6 text-yellow-400">Companion</h2>
+                                <h2 className="text-2xl font-bold mb-6 text-yellow-400 capitalize">Companion</h2>
                                 {playerData.petInfo ? (
                                     <>
                                         <div className="flex justify-between items-end mb-6">
                                             <div>
-                                                <p className="text-neutral-500 text-sm">Name</p>
+                                                <p className="text-neutral-500 text-sm capitalize">Name</p>
                                                 <p className="text-xl font-bold">{playerData.petInfo.petName || "Unnamed"}</p>
                                             </div>
                                             <div className="text-right">
-                                                <p className="text-neutral-500 text-sm">Level</p>
+                                                <p className="text-neutral-500 text-sm capitalize">Level</p>
                                                 <p className="text-xl font-bold">{playerData.petInfo.level}</p>
                                             </div>
                                         </div>
@@ -648,25 +656,25 @@ export default function FFInsights() {
                                         </div>
                                     </>
                                 ) : (
-                                    <p className="text-neutral-600 text-center py-10">No active companion.</p>
+                                    <p className="text-neutral-600 text-center py-10 capitalize">No Active Companion.</p>
                                 )}
                             </div>
                             
                             <div className="lg:col-span-2 bg-gradient-to-br from-indigo-900/20 to-purple-900/20 border border-indigo-500/30 rounded-3xl p-8 backdrop-blur-md">
-                                <h2 className="text-2xl font-bold mb-8 text-indigo-400">Guild Architecture</h2>
+                                <h2 className="text-2xl font-bold mb-8 text-indigo-400 capitalize">Guild Architecture</h2>
                                 {playerData.clanBasicInfo ? (
                                     <>
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
                                             <div className="md:col-span-2">
-                                                <p className="text-neutral-500 text-sm">Clan Name</p>
+                                                <p className="text-neutral-500 text-sm capitalize">Clan Name</p>
                                                 <p className="text-3xl font-black text-white drop-shadow-md">{playerData.clanBasicInfo.clanName}</p>
                                             </div>
                                             <div>
-                                                <p className="text-neutral-500 text-sm">Level</p>
+                                                <p className="text-neutral-500 text-sm capitalize">Level</p>
                                                 <p className="text-2xl font-bold">{playerData.clanBasicInfo.clanLevel}</p>
                                             </div>
                                             <div>
-                                                <p className="text-neutral-500 text-sm">Capacity</p>
+                                                <p className="text-neutral-500 text-sm capitalize">Capacity</p>
                                                 <p className="text-2xl font-bold text-cyan-300">{playerData.clanBasicInfo.currentMembers} / {playerData.clanBasicInfo.maxMembers}</p>
                                             </div>
                                         </div>
@@ -674,12 +682,12 @@ export default function FFInsights() {
                                         <div className="bg-black/30 rounded-2xl p-6 border border-white/5">
                                             <div className="flex items-center gap-2 mb-4">
                                                 <Shield className="w-5 h-5 text-indigo-400" />
-                                                <h3 className="text-lg font-bold text-neutral-200">Captain's Intel</h3>
+                                                <h3 className="text-lg font-bold text-neutral-200 capitalize">Captain Intel</h3>
                                             </div>
                                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                                                 <div>
-                                                    <p className="text-neutral-400">Name: <span className="text-white font-bold">{playerData.captainBasicInfo?.nickname}</span></p>
-                                                    <p className="text-neutral-400">UID: <span className="text-white font-mono">{playerData.captainBasicInfo?.accountId}</span></p>
+                                                    <p className="text-neutral-400 capitalize">Name: <span className="text-white font-bold">{playerData.captainBasicInfo?.nickname}</span></p>
+                                                    <p className="text-neutral-400 uppercase">UID: <span className="text-white font-mono">{playerData.captainBasicInfo?.accountId}</span></p>
                                                 </div>
                                                 <div className="flex gap-3">
                                                     {playerData.captainBasicInfo?.weaponSkinShows?.map((id: number, i: number) => (
@@ -690,7 +698,7 @@ export default function FFInsights() {
                                         </div>
                                     </>
                                 ) : (
-                                    <p className="text-neutral-600 text-center py-20">Player is a lone wolf (No Guild).</p>
+                                    <p className="text-neutral-600 text-center py-20 capitalize">Player Is A Lone Wolf (No Guild).</p>
                                 )}
                             </div>
                         </div>
@@ -738,7 +746,7 @@ export default function FFInsights() {
 
             <section id="contact" className="py-32 px-6 relative z-10 bg-[#050505]">
                 <div className="text-center mb-16">
-                    <h2 className="text-4xl md:text-6xl font-black text-white tracking-widest uppercase">CONTACT US</h2>
+                    <h2 className="text-4xl md:text-6xl font-black text-white tracking-widest uppercase">Contact Us</h2>
                 </div>
                 <ContactForm />
             </section>
@@ -750,7 +758,7 @@ export default function FFInsights() {
                         <span className="text-emerald-500 font-mono text-sm capitalize">Server Status: Operational</span>
                     </div>
                 </div>
-                <p className="text-white font-medium text-sm mb-4">© 2026 FF INSIGHTS. All Rights Reserved.</p>
+                <p className="text-white font-medium text-sm mb-4 capitalize">© 2026 FF Insights. All Rights Reserved.</p>
                 <p className="text-neutral-600 text-xs max-w-2xl mx-auto leading-relaxed capitalize">Disclaimer: This Is An Unofficial API And Is Not Affiliated With, Endorsed, Sponsored, Or Specifically Approved By Garena.</p>
             </footer>
         </div>
