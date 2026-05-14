@@ -8,7 +8,7 @@ import Lenis from "lenis";
 import { 
     Search, Shield, Cpu, ArrowRight, Activity, 
     Mail, User, MessageSquare, Database, Target, 
-    Zap, Send, Check, Loader2 
+    Zap, Send, Check, Loader2, ChevronDown 
 } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -376,6 +376,7 @@ export default function FFInsights() {
     const [activeSection, setActiveSection] = useState("info");
     const [uid, setUid] = useState("");
     const [region, setRegion] = useState("IND");
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [playerData, setPlayerData] = useState<any>(null);
     const [loading, setLoading] = useState(false);
     const [bgKey, setBgKey] = useState(0);
@@ -443,9 +444,42 @@ export default function FFInsights() {
                     <p className="mt-6 max-w-xl text-neutral-400 font-light">Harness The Raw Telemetry Of The Battlefield. Real Time Player Insights And Kinetic Data Analysis.</p>
                     
                     <div className="mt-12 w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-2 flex items-center gap-2 shadow-[0_0_40px_rgba(0,255,255,0.05)] focus-within:shadow-[0_0_40px_rgba(0,255,255,0.2)] transition-all">
-                        <select value={region} onChange={(e) => setRegion(e.target.value)} className="bg-transparent text-white border-r border-white/10 px-4 outline-none appearance-none uppercase">
-                            <option value="IND">IND</option><option value="BD">BD</option><option value="SG">SG</option>
-                        </select>
+                        
+                        <div className="relative flex items-center h-full border-r border-white/10">
+                            <button 
+                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                className="bg-transparent text-white px-4 h-full flex items-center gap-2 outline-none uppercase font-bold text-sm tracking-widest"
+                            >
+                                {region}
+                                <motion.div animate={{ rotate: isDropdownOpen ? 180 : 0 }} transition={{ duration: 0.3 }}>
+                                    <ChevronDown className="w-4 h-4 text-cyan-400" />
+                                </motion.div>
+                            </button>
+                            <AnimatePresence>
+                                {isDropdownOpen && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, y: -10 }} 
+                                        animate={{ opacity: 1, y: 0 }} 
+                                        exit={{ opacity: 0, y: -10 }} 
+                                        className="absolute top-[120%] left-0 w-28 bg-black/90 backdrop-blur-2xl border border-white/10 rounded-xl overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.8)] z-50 flex flex-col"
+                                    >
+                                        {["IND", "BD", "SG"].map((r) => (
+                                            <button 
+                                                key={r}
+                                                onClick={() => { setRegion(r); setIsDropdownOpen(false); }}
+                                                className={cn(
+                                                    "px-4 py-3 text-left transition-colors uppercase font-bold tracking-widest text-sm hover:bg-white/5", 
+                                                    region === r ? "text-cyan-400 bg-white/5" : "text-white"
+                                                )}
+                                            >
+                                                {r}
+                                            </button>
+                                        ))}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
                         <input value={uid} onChange={(e) => setUid(e.target.value)} type="number" placeholder="Enter Target UID" className="flex-1 bg-transparent px-4 outline-none placeholder:text-neutral-600 capitalize" />
                         <button onClick={fetchProfile} className="bg-white text-black p-4 rounded-xl hover:bg-cyan-400 transition-colors">
                             {loading ? <Cpu className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
