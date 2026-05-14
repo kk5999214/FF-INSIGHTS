@@ -259,29 +259,40 @@ const BioFluidBackground = () => {
     return <div ref={containerRef} className="absolute inset-0 z-0 opacity-50" />;
 };
 
-// --- CONTACT FORM W/ MORPH SUBMIT & RESET ---
+// --- CONTACT FORM W/ LIVE API FETCH ---
 const ContactForm = () => {
     const [status, setStatus] = useState("idle");
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [message, setMessage] = useState("");
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (status !== "idle") return;
         
         setStatus("loading");
         
-        // This is where the Brave API fetch request will go
-        setTimeout(() => {
-            setStatus("success");
-            // Wipe the form clean when successful
-            setName("");
-            setEmail("");
-            setMessage("");
-        }, 2000);
-        
-        setTimeout(() => setStatus("idle"), 4000);
+        try {
+            const response = await fetch('/api/contact', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, message })
+            });
+
+            if (response.ok) {
+                setStatus("success");
+                setName("");
+                setEmail("");
+                setMessage("");
+                setTimeout(() => setStatus("idle"), 4000);
+            } else {
+                setStatus("idle");
+                alert("Transmission Failed. Secure connection lost.");
+            }
+        } catch (error) {
+            setStatus("idle");
+            alert("Transmission Failed. Check network connection.");
+        }
     };
 
     return (
@@ -393,7 +404,6 @@ export default function FFInsights() {
                 }
             });
 
-            // Fallback for bottom of page to ensure Contact highlights perfectly
             if ((window.innerHeight + Math.round(window.scrollY)) >= document.body.offsetHeight - 50) {
                 setActiveSection("contact");
             }
@@ -497,7 +507,7 @@ export default function FFInsights() {
                                 <h3 className="text-lg font-bold text-neutral-300 capitalize">Captain Arsenal</h3>
                                 <div className="flex gap-4 mt-4">
                                     {playerData.captainBasicInfo?.weaponSkinShows?.map((id: number, i: number) => (
-                                        <SafeImage key={i} id={id} className="w-24 h-24 object-contain" />
+                                        <SafeImage key={i} id={id} className="w-full h-32 object-contain" />
                                     ))}
                                 </div>
                             </div>
